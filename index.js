@@ -6,7 +6,7 @@ require('./auth');
 const app = express();
 
 function isLoggedIn(req, res, next) {
-  req.user ? next() : res.sendStatus(401);
+    req.user ? next() : res.sendStatus(401);
 }
 
 app.use(session({ secret: 'cats', resave: false, saveUninitialized: true }));
@@ -14,32 +14,38 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/', (req, res) => {
-  res.send('<a href="/auth/google">Authenticate with Google</a>');
+    res.send('<a href="/auth/google">Loggin with Google</a>');
 });
 
 app.get('/auth/google',
-  passport.authenticate('google', { scope: [ 'email', 'profile' ] }
-));
+    passport.authenticate('google', { scope: ['email', 'profile'] }
+    ));
 
-app.get( '/auth/google/callback',
-  passport.authenticate( 'google', {
-    successRedirect: '/protected',
-    failureRedirect: '/auth/google/failure'
-  })
+app.get('/auth/google/callback',
+    passport.authenticate('google', {
+        successRedirect: '/protected',
+        failureRedirect: '/auth/google/failure'
+    })
 );
 
 app.get('/protected', isLoggedIn, (req, res) => {
-  res.send(`Hello ${req.user.displayName}`);
+    res.send(`Hello ${req.user.displayName}`);
 });
 
 app.get('/logout', (req, res) => {
-  req.logout();
-  req.session.destroy();
-  res.send('Goodbye!');
+    req.logout((err) => {
+        if (err) {
+            console.error(err);
+        }
+        req.session.destroy(() => {
+            res.send('Goodbye!'); // Display "Goodbye!" to the user after logout
+        });
+    });
 });
 
+
 app.get('/auth/google/failure', (req, res) => {
-  res.send('Failed to authenticate..');
+    res.send('Failed to authenticate..');
 });
 
 app.listen(5000, () => console.log('listening on port: 5000'));
